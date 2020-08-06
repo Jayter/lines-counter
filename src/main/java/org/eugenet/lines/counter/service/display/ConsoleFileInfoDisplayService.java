@@ -25,7 +25,7 @@ public class ConsoleFileInfoDisplayService implements FileInfoDisplayService {
     private StringBuilder getPrefix(int count) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < count; i++) {
-            result.append("\t");
+            result.append("  ");
         }
         return result;
     }

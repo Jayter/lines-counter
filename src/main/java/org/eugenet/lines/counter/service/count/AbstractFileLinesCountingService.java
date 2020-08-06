@@ -27,7 +27,9 @@ public abstract class AbstractFileLinesCountingService implements FileLinesCount
             if (file.isDirectory()) {
                 totalCount += countLinesInDirectory(file, list, depth + 1);
             } else {
-                totalCount += countLinesInFile(file, list, depth + 1);
+                if (isFileSupported(file)) {
+                    totalCount += countLinesInFile(file, list, depth + 1);
+                }
             }
         }
         info.setCount(totalCount);
@@ -35,6 +37,8 @@ public abstract class AbstractFileLinesCountingService implements FileLinesCount
         return totalCount;
     }
 
-    protected abstract int countLinesInFile(File folder, List<FileInfo> list, int depth);
+    protected abstract int countLinesInFile(File file, List<FileInfo> list, int depth);
+
+    protected abstract boolean isFileSupported(File file);
 
 }

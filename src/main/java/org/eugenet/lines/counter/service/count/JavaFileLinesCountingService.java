@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+
 import org.eugenet.lines.counter.domain.FileInfo;
 
 public class JavaFileLinesCountingService extends AbstractFileLinesCountingService {
@@ -11,6 +12,8 @@ public class JavaFileLinesCountingService extends AbstractFileLinesCountingServi
     private static final String MULTI_LINE_COMMENT_START = "/*";
     private static final String MULTI_LINE_COMMENT_END = "*/";
     private static final String SINGLE_LINE_COMMENT_START = "//";
+    private static final String JAVA_FILE_EXTENSION = ".java";
+    private static final String EMPTY_LINE = "";
 
     private boolean isInsideMultiLineComment;
 
@@ -23,38 +26,39 @@ public class JavaFileLinesCountingService extends AbstractFileLinesCountingServi
         return count;
     }
 
-    public long count(File file) {
+    @Override
+    protected boolean isFileSupported(File file) {
+        return file.getName().endsWith(JAVA_FILE_EXTENSION);
+    }
+
+    private long count(File file) {
         try {
             return Files.lines(file.toPath())
-                        .filter(line -> shouldCount(line.trim()))
-                        .count();
+                    .map(String::trim)
+                    .map(this::removeComment)
+                    .filter(string -> !string.isEmpty())
+                    .count();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private boolean shouldCount(String line) {
-        if (line.startsWith(SINGLE_LINE_COMMENT_START)) {
-            return false;
-        }
-        String updatedLine = removeMultiLineComment(line).trim();
-        return !updatedLine.isEmpty();
-    }
-
-    private String removeMultiLineComment(String line) {
-        if (!isInsideMultiLineComment) {
-            int startIndex = line.indexOf(MULTI_LINE_COMMENT_START);
-            if (startIndex == 0) {
-                isInsideMultiLineComment = true;
-                return removeMultiLineComment(line.substring(startIndex + 2).trim());
-            }
-        } else {
-            int endIndex = line.indexOf(MULTI_LINE_COMMENT_END);
-            if (endIndex >= 0) {
+    private String removeComment(String line) {
+        if (isInsideMultiLineComment) {
+            if (line.contains(MULTI_LINE_COMMENT_END)) {
                 isInsideMultiLineComment = false;
-                return removeMultiLineComment(line.substring(endIndex + 2).trim());
+                return removeComment(line.substring(line.indexOf(MULTI_LINE_COMMENT_END) + 2).trim());
             }
-            return "";
+            return EMPTY_LINE;
+        }
+
+        if (line.startsWith(SINGLE_LINE_COMMENT_START)) {
+            return EMPTY_LINE;
+        }
+
+        if (line.startsWith(MULTI_LINE_COMMENT_START)) {
+            isInsideMultiLineComment = true;
+            return removeComment(line.substring(line.indexOf(MULTI_LINE_COMMENT_START) + 2).trim());
         }
 
         return line;
