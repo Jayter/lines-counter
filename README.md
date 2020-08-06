@@ -1,4 +1,4 @@
-#File Lines Counter
+# File Lines Counter
 
-This project is developed to count lines of code in a file. Currently only Java is supported.
-
+This project is developed to count lines of code in a file. Current supported language is Java.
+Result is printed to console.
